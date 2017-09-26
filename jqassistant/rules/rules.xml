@@ -1,0 +1,160 @@
+<jqa:jqassistant-rules xmlns:jqa="http://www.buschmais.com/jqassistant/core/rule/schema/v1.3">
+
+    <concept id="setPackageDepth">
+        <description>Sets the number of parent packages</description>
+        <cypher><![CDATA[
+            MATCH
+                (c:Type) <-[:CONTAINS]- (p1:Package),
+                path=(p1) <-[:CONTAINS*]- (p2:Package)
+            WITH
+	            c, max(length(path)) as packageDepth
+            SET
+                c.packageDepth = packageDepth
+            RETURN
+                c
+        ]]></cypher>
+    </concept>
+
+    <concept id="setComplexMethod">
+        <requiresParameter name="cyclomaticComplexity" type="int" defaultValue="20"/>
+        <description>Sets the type 'ComplexMethod' to methods with a high complexity</description>
+        <cypher><![CDATA[
+            MATCH
+                (m:Method)
+            WHERE
+                m.cyclomaticComplexity > {cyclomaticComplexity}
+            SET
+                m:ComplexMethod
+            RETURN
+                m
+        ]]></cypher>
+    </concept>
+
+    <constraint id="findDeepHierarchy">
+        <description>Finds inheritance hierarchies deeper than 4 levels</description>
+        <cypher><![CDATA[
+            MATCH
+                path=(t1:Type) -[:EXTENDS*]-> (t2:Type)
+            WHERE
+                t2.fqn = 'java.lang.Object' and length(path) > 4
+            RETURN
+                t1.fqn as class, length(path) as depth
+        ]]></cypher>
+    </constraint>
+
+    <constraint id="findPackageCycle">
+        <description>Finds class cycles</description>
+        <cypher><![CDATA[
+            MATCH
+                (p1:Package)-[:CONTAINS]-> (t1:Type) -[:DEPENDS_ON]-> (t2:Type) <-[:CONTAINS]- (p2:Package),
+                path=shortestPath((t2)-[:DEPENDS_ON*]->(t1))
+            WHERE
+                p1 <> p2
+            RETURN
+                p1.fqn AS package, EXTRACT(p IN nodes(path) | p.fqn) AS cycle
+        ]]></cypher>
+    </constraint>
+
+    <constraint id="findDependInversion">
+        <requiresConcept refId="setPackageDepth" />
+        <description>Finds classes that refer to outer classes</description>
+        <cypher><![CDATA[
+            MATCH
+                (c1:Type) -[:DEPENDS_ON]-> (c2:Type)
+            WHERE
+                c1.packageDepth > c2.packageDepth
+            RETURN
+                c1.fqn as inner, c2.fqn as outer
+        ]]></cypher>
+    </constraint>
+
+    <constraint id="findTooManyMethodCount">
+        <requiresParameter name="rootPackage" type="String" defaultValue="jqademo"/>
+        <description>Finds classes that have more than 20 methods</description>
+        <cypher><![CDATA[
+            MATCH
+                (t:Type) -[:DECLARES]-> (m:Method)
+            WITH
+                t.fqn as classname, count(m) as methodCount
+            WHERE
+                classname starts with {rootPackage} and methodCount > 20
+            RETURN
+                classname, methodCount
+        ]]></cypher>
+    </constraint>
+
+    <constraint id="findTooComplexMethod">
+        <description>Finds methods with a complexity higher than 20</description>
+        <cypher><![CDATA[
+            MATCH
+                (t:Type) -[:DECLARES]-> (m:Method)
+            WHERE
+                m.cyclomaticComplexity > 20
+            RETURN
+                t.fqn as className, m.signature as methodName
+        ]]></cypher>
+    </constraint>
+
+    <constraint id="findTooComplexMethodCaller">
+        <requiresConcept refId="setComplexMethod" />
+        <description>Finds callers on too complex methods</description>
+        <cypher><![CDATA[
+            MATCH
+	            (t:Type) -[:DECLARES]-> (m1:Method) -[:INVOKES]-> (m:ComplexMethod)
+            RETURN
+	            t.fqn as callerClass, m1.signature as callerMethod, m.signature as complexMethod
+        ]]></cypher>
+    </constraint>
+
+    <constraint id="findPlantumlExceptions">
+        <description>Finds exceptions defined in PlantUML</description>
+        <cypher><![CDATA[
+        MATCH
+            (p1:Package)-[:CONTAINS]-> (t1:Type) -[:DEPENDS_ON]-> (t2:Type) <-[:CONTAINS]- (p2:Package),
+            (puml1:PlantUml:Package)  -[:MAY_DEPEND_ON]-> (puml2:PlantUml:Package)
+        WHERE
+            p1.fqn = puml1.fqn and p2.fqn = puml2.fqn
+        RETURN
+            p1.fqn, p2.fqn
+        ]]></cypher>
+    </constraint>
+
+    <constraint id="findAnnotationMismatch">
+        <description>Finds classes that are annotated by RequireHashCode annotation, but do not implement hashCode</description>
+        <cypher><![CDATA[
+        MATCH
+            (j:Type) -[:ANNOTATED_BY]-> () -[:OF_TYPE]-> (t:Type) -[:DECLARES]-> (m:Member) -[]-> (v:Value)
+        WHERE
+            t.fqn = 'jqademo.annotation.HashCodeRequired'
+            AND v.value = true
+            AND NOT (j) -[:DECLARES]-> (:Method {name: 'hashCode'})
+        RETURN
+            j.fqn as annotatedClass, t.fqn as annotation
+        ]]></cypher>
+    </constraint>
+
+    <constraint id="findUncoveredMethod">
+        <description>Finds uncovered setter methods</description>
+        <cypher><![CDATA[
+        MATCH
+            (c:Jacoco:Class) -- (m:Jacoco:Method) -[:HAS_COUNTERS]-> (ct)
+        WHERE
+            m.name starts with "set" and ct.covered = 0
+        RETURN
+            distinct c.fqn as className, m.signature as uncoveredMethod
+        ]]></cypher>
+    </constraint>
+
+    <!-- Critical in order to break the build -->
+    <group id="from-xml" severity="major">
+        <includeConstraint refId="findDeepHierarchy"/>
+        <includeConstraint refId="findPackageCycle" /> <!--severity="critical"/>-->
+        <includeConstraint refId="findDependInversion"/>
+        <includeConstraint refId="findTooManyMethodCount"/>
+        <includeConstraint refId="findTooComplexMethod"/>
+        <includeConstraint refId="findTooComplexMethodCaller"/>
+        <includeConstraint refId="findAnnotationMismatch"/>
+        <includeConstraint refId="findUncoveredMethod"/>
+    </group>
+
+</jqa:jqassistant-rules>

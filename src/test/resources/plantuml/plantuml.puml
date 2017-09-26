@@ -1,0 +1,13 @@
+@startuml
+
+package jqademo.plantuml.package1 {}
+package jqademo.plantuml.package2 {}
+
+'=============================================
+' Definition of exceptions
+' package1 is not allowed to access package2
+'=============================================
+
+jqademo.plantuml.package1 --> jqademo.plantuml.package2
+
+@enduml

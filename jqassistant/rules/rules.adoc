@@ -1,0 +1,29 @@
+
+== Architecture
+
+=== Use ProxyInterface
+
+The TargetClass must be called through the ProxyInterface. Without the proxy TargetClass methods won't by monitored.
+
+[[findAccessThroughProxy]]
+.TargetClass must be accessed through ProxyInterface.
+[source,cypher,role=constraint]
+----
+MATCH
+	(target:Class) -[:DECLARES]-> (tm:Method) <-[:INVOKES]- (cm:Method) <-[:DECLARES]- (caller:Class)
+WHERE
+	target.fqn = 'jqademo.directaccess.target.TargetClass'
+	AND NOT (caller) -[:IMPLEMENTS]-> (:Interface)
+RETURN
+	DISTINCT caller.fqn
+----
+
+This is a team descision from 27th Sep 2017. The build must break, when the constraint is broken.
+
+=== Severities
+
+[[from-asciidoc]]
+.Group description.
+[role=group,severity=major,includesConstraints="findAccessThroughProxy"]
+
+The default severity for rules in this file is critical.

@@ -1,0 +1,116 @@
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0-M4'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: "jacoco"
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+project.ext["jqaversion"] = "1.3.0"
+project.ext["jqapluginversion"] = "1.3"
+project.ext["neo4jv3"] = "3.1.3"
+
+configurations {
+    jqaRuntime
+}
+
+
+dependencies {
+
+    testCompile 'junit:junit:4.12'
+    testCompile('org.assertj:assertj-core:3.7.0')
+
+    jqaRuntime("com.buschmais.jqassistant:jqassistant-commandline:${project.jqaversion}") {
+        exclude group: 'com.buschmais.jqassistant', module: 'neo4jserver.neo4jv2'
+    }
+    jqaRuntime("com.buschmais.jqassistant:neo4jserver.neo4jv3:${project.jqaversion}")
+    jqaRuntime("org.neo4j:neo4j:${project.neo4jv3}")
+    jqaRuntime("org.neo4j.app:neo4j-server:${project.neo4jv3}")
+
+    jqaRuntime("com.buschmais.jqassistant.plugin:java:${project.jqapluginversion}")
+    jqaRuntime("com.buschmais.jqassistant.plugin:java8:${project.jqapluginversion}")
+    jqaRuntime("com.buschmais.jqassistant.plugin:junit:${project.jqapluginversion}")
+
+}
+
+jacoco {
+    toolVersion = "0.7.6.201602180812"
+    // reportsDir = file("$buildDir/customJacocoReportDir")
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        csv.enabled false
+        html.destination "${buildDir}/jacoco"
+        xml.destination "${buildDir}/jacoco/jacocoTestReport.xml"
+    }
+}
+
+test {
+    jacoco {
+        append = false
+        destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
+    }
+}
+
+def jqagroup = 'jqassistant'
+
+task jqaclean(type: Delete) {
+    delete 'jqassistant/report'
+    delete 'jqassistant/store'
+    group = jqagroup
+}
+
+task(jqascan, dependsOn: 'jqaclean', type: JavaExec) {
+    main = 'com.buschmais.jqassistant.commandline.Main'
+    classpath = configurations.jqaRuntime
+    args 'scan'
+    args '-f'
+    args 'java:classpath::build/classes/main'
+    args 'java:classpath::build/classes/test'
+    args 'java:classpath::build/resources/test'
+    args 'java:classpath::build/jacoco'
+    group = jqagroup
+}
+
+task(jqavalidate, dependsOn: 'jqascan', type: JavaExec) {
+    main = 'com.buschmais.jqassistant.commandline.Main'
+    classpath = configurations.jqaRuntime
+    args 'analyze'
+    args '-r'
+    args 'jqassistant/rules'
+    args '-warnOnSeverity'
+    args 'INFO'
+    args '-failOnSeverity'
+    args 'CRITICAL' // MAJOR
+    args '-groups'
+    args 'from-xml'
+    args 'from-asciidoc'
+    group = jqagroup
+}
+
+task(jqareport, type: JavaExec) {
+    main = 'com.buschmais.jqassistant.commandline.Main'
+    classpath = configurations.jqaRuntime
+    args 'report'
+    group = jqagroup
+}
+
+task(jqaserver, type: JavaExec) {
+    main = 'com.buschmais.jqassistant.commandline.Main'
+    classpath = configurations.jqaRuntime
+    args 'server'
+    standardInput = System.in
+    group = jqagroup
+}

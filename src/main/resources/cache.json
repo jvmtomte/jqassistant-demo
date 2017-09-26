@@ -1,0 +1,188 @@
+[
+  {
+    "id": "e6482969-c206-11e6-9534-cf45a2467037",
+    "name": "Unnamed document",
+    "folder": "general",
+    "content": "// Create a node\nCREATE (n {name:\"World\"}) RETURN \"hello\", n.name"
+  },
+  {
+    "id": "e648296f-c206-11e6-9534-cf45a2467037",
+    "name": "Unnamed document",
+    "folder": "general",
+    "content": "// Get some data\nMATCH (n) RETURN n LIMIT 100"
+  },
+  {
+    "id": "e648507e-c206-11e6-9534-cf45a2467037",
+    "name": "Unnamed document",
+    "folder": "general",
+    "content": "// What is related, and how\nMATCH (a)-[r]->(b)\nWHERE labels(a) <> [] AND labels(b) <> []\nRETURN DISTINCT head(labels(a)) AS This, type(r) as To, head(labels(b)) AS That\nLIMIT 10"
+  },
+  {
+    "id": "e648508d-c206-11e6-9534-cf45a2467037",
+    "name": "Unnamed document",
+    "folder": "general",
+    "content": "// REST API\n:GET /db/data"
+  },
+  {
+    "id": "e648508d-c206-11e6-9535-cf45a2467037",
+    "name": "Unnamed document",
+    "folder": "system",
+    "content": "// Server configuration\n:GET /db/manage/server/jmx/domain/org.neo4j/instance%3Dkernel%230%2Cname%3DConfiguration"
+  },
+  {
+    "id": "e6485090-c206-11e6-9535-cf45a2467037",
+    "name": "Unnamed document",
+    "folder": "system",
+    "content": "// Kernel information\n:GET /db/manage/server/jmx/domain/org.neo4j/instance%3Dkernel%230%2Cname%3DKernel"
+  },
+  {
+    "id": "e6485090-c206-11e6-9536-cf45a2467037",
+    "name": "Unnamed document",
+    "folder": "system",
+    "content": "// ID Allocation\n:GET /db/manage/server/jmx/domain/org.neo4j/instance%3Dkernel%230%2Cname%3DPrimitive%20count"
+  },
+  {
+    "id": "e6485090-c206-11e6-9537-cf45a2467037",
+    "name": "Unnamed document",
+    "folder": "system",
+    "content": "// Store file sizes\n:GET /db/manage/server/jmx/domain/org.neo4j/instance%3Dkernel%230%2Cname%3DStore%20file%20sizes"
+  },
+  {
+    "id": "e6485090-c206-11e6-9538-cf45a2467037",
+    "name": "Unnamed document",
+    "folder": "system",
+    "content": "// Extensions\n:GET /db/data/ext"
+  },
+  {
+    "id": "9cb7f114-c20e-11e6-a31c-51e699ac3e6e",
+    "name": "Unnamed document",
+    "folder": "a57d93ee-c20e-11e6-a31c-51e699ac3e6e",
+    "content": "// Paketzyklen\nMATCH\n (p1:Package)-[:DEPENDS_ON]->(p2:Package),\n path=shortestPath((p2)-[:DEPENDS_ON*]->(p1))\nWHERE\n p1 <> p2\nRETURN\n p1.fqn AS Package, count(EXTRACT(p IN nodes(path) | p.fqn)) AS Cycle\nORDER BY\n Package"
+  },
+  {
+    "id": "bab3b913-c20e-11e6-a31c-51e699ac3e6e",
+    "name": "Unnamed document",
+    "folder": "a57d93ee-c20e-11e6-a31c-51e699ac3e6e",
+    "content": "// Anzahl Paketzyklen\nMATCH\n (p1:Package)-[:DEPENDS_ON]->(p2:Package),\n path=shortestPath((p2)-[:DEPENDS_ON*]->(p1))\nWHERE\n p1 <> p2\nRETURN\n p1.fqn AS Package, EXTRACT(p IN nodes(path) | p.fqn) AS Cycle\nORDER BY\n Package"
+  },
+  {
+    "id": "2ad9d3d4-c211-11e6-a31c-51e699ac3e6e",
+    "name": "Unnamed document",
+    "folder": "a57d93ee-c20e-11e6-a31c-51e699ac3e6e",
+    "content": "// Paketzyklen für Paket\nMATCH\n (p1:Package)-[:DEPENDS_ON]->(p2:Package),\n path=shortestPath((p2)-[:DEPENDS_ON*]->(p1))\nWHERE\n p1 <> p2 and p1.fqn =~ 'de.lv1871.model*'\nRETURN\n p1.fqn AS Package, EXTRACT(p IN nodes(path) | p.fqn) AS Cycle\nORDER BY\n Package"
+  },
+  {
+    "id": "71225097-c2cc-11e6-b6e6-214418348a10",
+    "name": "Unnamed document",
+    "folder": "a57d93ee-c20e-11e6-a31c-51e699ac3e6e",
+    "content": "// Grosse Paketzyklen\nMATCH\n (p1:Package)-[:DEPENDS_ON]->(p2:Package),\n path=shortestPath((p2)-[:DEPENDS_ON*]->(p1))\nWHERE\n p1.fqn <> p2.fqn and length(path) > 5\nRETURN\n EXTRACT(p IN nodes(path) | p) AS Cycle"
+  },
+  {
+    "id": "cc465f75-c213-11e6-a31c-51e699ac3e6e",
+    "name": "Unnamed document",
+    "folder": "a57d93ee-c20e-11e6-a31c-51e699ac3e6e",
+    "content": "// Paketabhängigkeiten\nmatch (p1:Package) -[d:DEPENDS_ON]-> (p2:Package)\nwhere not p2.fqn =~ (p1.fqn + '\\\\..*')\nreturn p1.fqn, p2.fqn\n//limit 20"
+  },
+  {
+    "id": "e79dd08f-c215-11e6-a31c-51e699ac3e6e",
+    "name": "Unnamed document",
+    "folder": "a57d93ee-c20e-11e6-a31c-51e699ac3e6e",
+    "content": "// Paketabhängigkeiten ausgehend\nmatch (p1:Package) -[d:DEPENDS_ON]-> (p2:Package)\nwhere p1 <> p2\nreturn p1.fqn as Package, count(p2) as PackageCountOut\norder by PackageCountOut desc\n"
+  },
+  {
+    "id": "04069c74-c216-11e6-a31c-51e699ac3e6e",
+    "name": "Unnamed document",
+    "folder": "a57d93ee-c20e-11e6-a31c-51e699ac3e6e",
+    "content": "// Paketabhängigkeiten eingehend\nmatch (p1:Package) <-[d:DEPENDS_ON]- (p2:Package)\nwhere p1 <> p2\nreturn p1.fqn as Package, count(p2) as PackageCountOut\norder by PackageCountOut desc"
+  },
+  {
+    "id": "4d3e8528-c21a-11e6-a31c-51e699ac3e6e",
+    "name": "Unnamed document",
+    "folder": "a57d93ee-c20e-11e6-a31c-51e699ac3e6e",
+    "content": "// Länge Klassenhierarchie\nMATCH\n h=(class:Class)-[:EXTENDS*]->(super:Type)\nWHERE\n super.fqn STARTS WITH 'de.lv1871' AND\n length(h) > 4\nRETURN\n class.fqn as Class, length(h) as Depth\nORDER BY\n Depth desc\n//LIMIT 50"
+  },
+  {
+    "id": "07b0c676-c21b-11e6-a31c-51e699ac3e6e",
+    "name": "Unnamed document",
+    "folder": "a57d93ee-c20e-11e6-a31c-51e699ac3e6e",
+    "content": "// Klassenhierarchie Details\nMATCH\n h=(class:Class)-[:EXTENDS*]->(super:Type)\nWHERE\n super.fqn STARTS WITH 'de.lv1871' AND\n length(h) > 4\nRETURN\n class.fqn as Class, EXTRACT(p IN nodes(h) | p.fqn) as Parents, length(h) as Length\nORDER BY\n Length desc\nLIMIT 20"
+  },
+  {
+    "id": "d331a356-c21b-11e6-a31c-51e699ac3e6e",
+    "name": "Unnamed document",
+    "folder": "a57d93ee-c20e-11e6-a31c-51e699ac3e6e",
+    "content": "// Rechenkern Abhängigkeiten\nmatch (c:Class) -[:DEPENDS_ON]-> (t:Type)\nwhere not c.fqn starts with 'de.lv1871.mathe' and t.fqn starts with 'de.lv1871.mathe'\nreturn distinct c.fqn"
+  },
+  {
+    "id": "f64e2c99-c21c-11e6-a31c-51e699ac3e6e",
+    "name": "Unnamed document",
+    "folder": "a57d93ee-c20e-11e6-a31c-51e699ac3e6e",
+    "content": "// Anzahl Methoden pro Klasse\nmatch (c:Class) -[:DECLARES]-> (m:Method)\nreturn c.fqn as class, count(m) as count\norder by count desc\nlimit 50"
+  },
+  {
+    "id": "dd5d6691-c2af-11e6-9f6b-bdbd08bf8f10",
+    "name": "Unnamed document",
+    "folder": "a57d93ee-c20e-11e6-a31c-51e699ac3e6e",
+    "content": "// Komplexität per Klasse\nmatch (c:Class) -[:DECLARES]-> (m:Method)\nreturn c.fqn as Class, sum(m.cyclomaticComplexity) as Complexity\norder by Complexity desc\nlimit 50"
+  },
+  {
+    "id": "d3d14a02-c2b0-11e6-9f6b-bdbd08bf8f10",
+    "name": "Unnamed document",
+    "folder": "a57d93ee-c20e-11e6-a31c-51e699ac3e6e",
+    "content": "// Komplexität per Paket\nmatch (p:Package) -[:CONTAINS]-> (c:Class) -[:DECLARES]-> (m:Method)\nreturn p.fqn as PAckage, sum(m.cyclomaticComplexity) as Complexity\norder by Complexity desc\nlimit 50"
+  },
+  {
+    "id": "de15e023-c2ba-11e6-b6e6-214418348a10",
+    "name": "Unnamed document",
+    "folder": "a57d93ee-c20e-11e6-a31c-51e699ac3e6e",
+    "content": "// Abhängigkeiten auf org.hibernate\nmatch (c:Class) -[:DEPENDS_ON]-> (t:Type)\nwhere t.fqn starts with 'org.hibernate'\nreturn c.fqn as Class, t.fqn as Reference\nlimit 20"
+  },
+  {
+    "id": "4dc2852b-c2bd-11e6-b6e6-214418348a10",
+    "name": "Unnamed document",
+    "folder": "a57d93ee-c20e-11e6-a31c-51e699ac3e6e",
+    "content": "// Abhängigkeiten auf org.hibernate und javax.persistence\nmatch \n (c:Class) -[:DEPENDS_ON]-> (t1:Type),\n (c) -[:DEPENDS_ON]-> (t2:Type)\nwhere t1.fqn starts with 'javax.persistence' and t2.fqn starts with 'org.hibernate'\nreturn distinct c.fqn as Class //, t1.fqn as Ref1, t2.fqn as Ref2\n//limit 50"
+  },
+  {
+    "id": "531659cb-c79f-11e6-abf0-5f26110e5dd5",
+    "name": "Unnamed document",
+    "folder": "a57d93ee-c20e-11e6-a31c-51e699ac3e6e",
+    "content": "// Klassen, die den java.util.Date Konstruktor aufrufen\nmatch\n (dateType:Type)-[:DECLARES]->(forbiddenMethod:Method),\n (type:Type)-[:DECLARES]->(method:Method)-[:INVOKES]->(forbiddenMethod)\nwhere\n dateType.fqn = 'java.util.Date'\n and forbiddenMethod:Constructor\nreturn\n type.fqn as Class, method.signature as Method"
+  },
+  {
+    "id": "c460ab66-d656-11e6-80f5-83884b610224",
+    "name": "Unnamed document",
+    "folder": "a57d93ee-c20e-11e6-a31c-51e699ac3e6e",
+    "content": "// Pakettiefe\nmatch \n\tpath=(p1:Package) <-[:CONTAINS*]- (p2:Package)\n//where p1.fqn = 'de.lv1871.model.rk'\nreturn p1.fqn, max(length(path)) as depth //, extract(n in nodes(path) | n.fqn)\n//order by depth desc\nlimit 20"
+  },
+  {
+    "id": "f868b6d9-d662-11e6-80f5-83884b610224",
+    "name": "Unnamed document",
+    "folder": "a57d93ee-c20e-11e6-a31c-51e699ac3e6e",
+    "content": "// Parent-Pakete\nmatch \n\tpath=(p1:Package) <-[:CONTAINS*]- (p2:Package)\nwhere p1.fqn starts with 'de.lv1871'\nreturn p1.fqn as package, collect (distinct p2.fqn) as parent_packages\n//order by depth desc\nlimit 20"
+  },
+  {
+    "id": "81e957cd-d744-11e6-aeb1-61245dfe0834",
+    "name": "Unnamed document",
+    "folder": "a57d93ee-c20e-11e6-a31c-51e699ac3e6e",
+    "content": "// Package Mismatch\nmatch \n\t(p1:Package) -[:DEPENDS_ON]-> (p3:Package)\nwhere p1.fqn starts with 'de.lv1871' \nand not p3.fqn starts with 'de.lv1871.shared' \nand not p3.fqn starts with 'de.lv1871.test' \nand not p3.fqn starts with 'de.lv1871.helper'\nand not p3.fqn starts with p1.fqn\nand p1.classCount > 0\nreturn p1.fqn as package, //collect (distinct p2.fqn) as parent_packages, count(distinct p2.fqn) as parent_count, \ncollect(distinct p3.fqn) as package_mismatch,\ncount(distinct p3.fqn) as mismatch_count\norder by mismatch_count desc"
+  },
+  {
+    "id": "fd4303d1-c218-11e6-a31c-51e699ac3e6e",
+    "name": "Unnamed document",
+    "folder": "149c1061-c216-11e6-a31c-51e699ac3e6e",
+    "content": "// Konzept Paketzyklen\nMATCH\n (p1:Package)-[:CONTAINS]->(t1:Type)-[:DEPENDS_ON]->(t2:Type)<-[:CONTAINS]-(p2:Package)\nWHERE\n p1<>p2\nCREATE UNIQUE\n (p1)-[:DEPENDS_ON]->(p2)\nRETURN\n p1 AS package, COUNT(DISTINCT p2) AS PackageDependencies"
+  },
+  {
+    "id": "bdf9138c-c223-11e6-a31c-51e699ac3e6e",
+    "name": "Unnamed document",
+    "folder": "149c1061-c216-11e6-a31c-51e699ac3e6e",
+    "content": "// Setze Anzahl Methoden\nmatch \n\t(c:Class) -[d:DECLARES]-> (m:Method)\nwith\n\tc, count(d) as counter\nset\n\tc.methodCount = counter\nreturn c"
+  },
+  {
+    "id": "216819f1-d743-11e6-8b71-eb3a5984de15",
+    "name": "Unnamed document",
+    "folder": "149c1061-c216-11e6-a31c-51e699ac3e6e",
+    "content": "// Setze Anzahl Klassen im Paket\nmatch (p:Package)\noptional match (p) -[:CONTAINS]-> (c:Class)\nwith p, count(c) as classCount\nset p.classCount = classCount\nreturn p //.fqn as package, classCount"
+  }
+]
